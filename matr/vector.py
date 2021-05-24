@@ -85,7 +85,7 @@ class Vector(VectorSpace):
 
     @property
     def length_squared(self):
-        return self@self
+        return self @ self
 
     @property
     def length(self):  # another semi-memoised expensive function
@@ -143,7 +143,7 @@ class Vector(VectorSpace):
         """
         res = Vector([0, 0, 0])
         for base in basis:
-            res += (self@base) / (base@base) * base  # inefficient TODO
+            res += (self @ base) / (base @ base) * base  # inefficient TODO
         return res
 
     def crop(self, bound):
@@ -152,13 +152,20 @@ class Vector(VectorSpace):
         """
         if self.length_squared < bound**2:
             return self
-        return bound * self.unit
+        else: 
+            return bound * self.unit
 
     def permute(self, p):
         """
         Input: vector p with permutation
-        Output: self permuted accodring to p
+        Output: self permuted according to p
         """
         # TODO: should this just be done with perm matrix?
         return Vector(tuple(map(self._value.__getitem__, p._value)))
         # ok now that is some really bad code
+
+    def limit(self, lim):
+        return Vector([max(min(lim, value), -lim) for value in self._value])
+
+    def limit_zero(self, lim):
+        return Vector([max(min(lim, value), 0) for value in self._value])

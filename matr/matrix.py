@@ -59,9 +59,9 @@ class Matrix(VectorSpace):  # TODO extract matrix and common to linalg module?
             elif m == 3:
                 # a(ei - fh) - b(di - fg) + c(dh - eg)
                 self._det = (
-                    v[0][0]*(v[1][1]*v[2][2] - v[1][2]*v[2][1]) -
-                    v[0][1]*(v[1][0]*v[2][2] - v[1][2]*v[2][0]) +
-                    v[0][2]*(v[1][0]*v[2][1] - v[1][1]*v[2][0])
+                    v[0][0] * (v[1][1] * v[2][2] - v[1][2] * v[2][1]) -
+                    v[0][1] * (v[1][0] * v[2][2] - v[1][2] * v[2][0]) +
+                    v[0][2] * (v[1][0] * v[2][1] - v[1][1] * v[2][0])
                 )
                 # I would feel bad about doing this if it wasn't the best way
             else:
@@ -77,6 +77,7 @@ class Matrix(VectorSpace):  # TODO extract matrix and common to linalg module?
 
     def __getitem__(self, pos):
         """index row with M[int] or value with M[int,int]. Index from 0."""
+        # Inexcusable
         try:
             i, j = pos
             return self._value[i][j]
@@ -122,7 +123,7 @@ class Matrix(VectorSpace):  # TODO extract matrix and common to linalg module?
             return NotImplemented
 
         if self.size[1] != other.size[0]:
-            raise ValueError('Incompatible Sizes')
+            raise ValueError(f'Incompatible Sizes of multiplaction of {self} and {other}')
         # TODO make some toggleable thing to supress all checks
 
         a = self._value
@@ -180,9 +181,9 @@ class Matrix(VectorSpace):  # TODO extract matrix and common to linalg module?
         :param i: index of row 1
         :param j: index of row 2
         """
-        f = lambda x: i if x==j else (j if x==i else x)
+        f = lambda x: i if x == j else (j if x == i else x)
         v = self._value
-        return vector.Vector(tuple(v[f(k)] for k in range(self.size)))
+        return Matrix(tuple(v[f(k)] for k in range(self.size)))
 
     def row_mult(self, i, m):
         """
@@ -193,8 +194,8 @@ class Matrix(VectorSpace):  # TODO extract matrix and common to linalg module?
         if m == 0:
             raise ValueError("m can't be zero!")
         v = self._value
-        new = tuple(m*x for x in v[i])
-        return Matrix(tuple(row if k!=i else new for k, row in enumerate(v)))
+        new = tuple(m * x for x in v[i])
+        return Matrix(tuple(row if k != i else new for k, row in enumerate(v)))
 
     def row_addm(self, i, j, m):
         """
@@ -207,8 +208,8 @@ class Matrix(VectorSpace):  # TODO extract matrix and common to linalg module?
         if m == 0:
             raise ValueError("m can't be zero!")
         v = self._value
-        new = tuple(x + m*y for x,y in zip(v[i], v[j]))
-        return Matrix(tuple(row if k!=i else new for k, row in enumerate(v)))
+        new = tuple(x + m*y for x, y in zip(v[i], v[j]))
+        return Matrix(tuple(row if k != i else new for k, row in enumerate(v)))
 
     def decomp_LR(self):
         """
@@ -223,52 +224,52 @@ class Matrix(VectorSpace):  # TODO extract matrix and common to linalg module?
         D is the scaling vector (represents dia matrix)
         f: number of flips in P
         """
-        if self._LR is None:
-            print('calculating LR...')
-            m, n = self.size
-            if m != n:
-                raise ValueError('only works for square matrices')
-            A = self._value
+        if self._LR is not None:
+            return self._LR
+        m, n = self.size
+        if m != n:
+            raise ValueError('LR Decomposition only works for square matrices.')
+        A = self._value
 
-            # Skalierung
-            D = tuple(1/sum(map(abs, row)) for row in A)
-            LR = [list(map(d.__mul__, row)) for d, row in zip(D, A)]
+        # Skalierung
+        D = tuple(1/sum(map(abs, row)) for row in A)
+        LR = [list(map(d.__mul__, row)) for d, row in zip(D, A)]
 
-            P = list(range(n))
-            f = 0  # yes, technically f is redundant, but recalculating the parity
-            # of a permutation would require a whole new alg, might as well use
-            # the information I have here. TODO: think about returning a list of
-            # swaps instead of P and f. Then f is just the length of the list.
-            for j in range(n-1):  # j is which col you're doing
-                # Pivotisierung
-                p = max((abs(row[j]), j+i) for i, row in enumerate(LR[j:]))[1]
-                LR[p], LR[j] = LR[j], LR[p]
-                if p != j:
-                    P[p], P[j] = P[j], P[p]
-                    f += 1
+        P = list(range(n))
+        f = 0  # yes, technically f is redundant, but recalculating the parity
+        # of a permutation would require a whole new alg, might as well use
+        # the information I have here. TODO: think about returning a list of
+        # swaps instead of P and f. Then f is just the length of the list.
+        for j in range(n-1):  # j is which col you're doing
+            # Pivotisierung
+            p = max((abs(row[j]), j+i) for i, row in enumerate(LR[j:]))[1]
+            LR[p], LR[j] = LR[j], LR[p]
+            if p != j:
+                P[p], P[j] = P[j], P[p]
+                f += 1
 
-                # Elimination
-                for i in range(j+1, n):  # i is each row in the j column
-                    LR[i][j] /= LR[j][j]
-                    for k in range(j+1, n):  # k is the columns right of i,j
-                        LR[i][k] -= LR[i][j]*LR[j][k]
+            # Elimination
+            for i in range(j+1, n):  # i is each row in the j column
+                LR[i][j] /= LR[j][j]
+                for k in range(j+1, n):  # k is the columns right of i,j
+                    LR[i][k] -= LR[i][j] * LR[j][k]
 
-            L = tuple(
-                tuple(
-                    LRij if i>j else (1 if i==j else 0)
-                    for j, LRij in enumerate(row)
-                ) for i, row in enumerate(LR)
-            )
+        L = tuple(
+            tuple(
+                LRij if i>j else (1 if i==j else 0)
+                for j, LRij in enumerate(row)
+            ) for i, row in enumerate(LR)
+        )
 
-            R = tuple(
-                tuple(
-                    LRij if i<=j else 0
-                    for j, LRij in enumerate(row)
-                ) for i, row in enumerate(LR)
-            )
+        R = tuple(
+            tuple(
+                LRij if i<=j else 0
+                for j, LRij in enumerate(row)
+            ) for i, row in enumerate(LR)
+        )
 
-            self._LR = Matrix(L), Matrix(R), vector.Vector(P), vector.Vector(D), f
-            # P is a list
+        self._LR = Matrix(L), Matrix(R), vector.Vector(P), vector.Vector(D), f
+        # P is a list
         return self._LR
 
     def forward_insertion(self, b):
@@ -323,7 +324,7 @@ class Matrix(VectorSpace):  # TODO extract matrix and common to linalg module?
         # PDAx = PDb
         # LRx = PDb
         # Ly = PDb and Rx = y
-        PDb = (D*b).permute(P)
+        PDb = (D * b).permute(P)
         y = L.forward_insertion(PDb)
         x = R.backward_insertion(y)
         return x
@@ -342,7 +343,7 @@ class Matrix(VectorSpace):  # TODO extract matrix and common to linalg module?
         r = prod(R[i][i] for i in range(D.size))
         d = prod(D._value)
         f = -1 if f%2 else 1  # (-1)^f
-        return r/(f*d)
+        return r / (f * d)
 
     def find_inverse_via_LR(self):
         res = []  # these are columns of the inverse
@@ -353,7 +354,7 @@ class Matrix(VectorSpace):  # TODO extract matrix and common to linalg module?
         # AA' = I
         # Axi = ei where ei is the ith column of I
         for i in range(n):
-            ei = vector.Vector(tuple(1 if i==j else 0 for j in range(n)))
+            ei = vector.Vector(tuple(1 if i == j else 0 for j in range(n)))
             xi = self.solve_LGS_via_LR(ei)
             res.append(xi)
         return Matrix(tuple(zip(*res)))
