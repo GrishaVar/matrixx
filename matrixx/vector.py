@@ -1,8 +1,8 @@
 from math import sqrt
 from operator import mul, add
 
-import matrix
-from vector_space import VectorSpace
+from matrixx.vector_space import VectorSpace
+import matrixx.matrix
 
 
 class Vector(VectorSpace):

@@ -1,8 +1,8 @@
 from operator import mul
 from math import prod
 
-import vector
-from vector_space import VectorSpace
+from matrixx.vector_space import VectorSpace
+import matrixx.vector
 
 
 class Matrix(VectorSpace):  # TODO extract matrix and common to linalg module?

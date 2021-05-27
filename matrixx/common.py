@@ -1,7 +1,7 @@
 from math import cos, sin, sqrt
 
-from matrix import Matrix as M
-from vector import Vector as V
+from matrixx.matrix import Matrix as M
+from matrixx.vector import Vector as V
 
 
 class V2:
