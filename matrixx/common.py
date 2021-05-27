@@ -22,70 +22,45 @@ class M2:
     E = M(((1,0), (0,1)), 1)
 
     @staticmethod
-    def grower2(s):
-        if s == 0:
-            return M2.z
-        if s == 1:
-            return M2.e
-        m = M((
-            (s, 0),
-            (0, s),
-        ))
-        m._det = s**2
-        return m
+    def rot(a):  # rotates up / anticlockwise
+        if not a:
+            return M2.E
+        return M((
+            (cos(a), -sin(a)),
+            (sin(a), cos(a)),
+        ), 1)
 
 
 class M3:
-    z = M(((0,0,0), (0,0,0), (0,0,0)))
-    z._det = 0
-
-    e = M(((1,0,0), (0,1,0), (0,0,1)))
-    e._det = 1
+    Z = M(((0,0,0), (0,0,0), (0,0,0)), 0)
+    E = M(((1,0,0), (0,1,0), (0,0,1)), 1)
 
     @staticmethod
     def x_rot(a):  # right hand rule rotation!
-        m = M((
+        if not a:
+            return M3.E
+        return M((
             (1, 0, 0),
             (0, cos(a), -sin(a)),
             (0, sin(a), cos(a)),
-        ))
-        m._det = 1
-        return m
+        ), 1)
 
     @staticmethod
     def y_rot(a):
-        if a == 1:
-            return M3.e
-        m = M((
+        if not a:
+            return M3.E
+        return M((
             (cos(a), 0, -sin(a)),
             (0, 1, 0),
             (sin(a), 0, cos(a)),
-        ))
-        m._det = 1
-        return m
+        ), 1)
 
     @staticmethod
     def z_rot(a):
-        if a == 1:
-            return M3.e
-        m = M((
+        if not a:
+            return M3.E
+        return M((
             (cos(a), -sin(a), 0),
             (sin(a), cos(a), 0),
             (0, 0, 1),
-        ))
-        m._det = 1
-        return m
-
-    @staticmethod
-    def grow(s):
-        if s == 0:
-            return M3.z
-        if s == 1:
-            return M3.e
-        m = M((
-            (s, 0, 0),
-            (0, s, 0),
-            (0, 0, s),
-        ))
-        m._det = s**3
-        return m
+        ), 1)

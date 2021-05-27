@@ -25,8 +25,5 @@ class VectorSpace:
     def __rsub__(self, other):
         return other + -self
 
-    def __eq__(self, other):
-        raise NotImplementedError('Equality not implemented')
-
     def __abs__(self):
         raise NotImplementedError('Norm not implemented')

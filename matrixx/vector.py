@@ -2,10 +2,11 @@ from math import sqrt
 from operator import mul, add
 
 from matrixx.vector_space import VectorSpace
+from matrixx.immutable import Immutable
 import matrixx.matrix
 
 
-class Vector(VectorSpace):
+class Vector(VectorSpace, Immutable):
     """
     Vector implementation. Index with V[i] (start at zero)
     Treated as vertical.
@@ -27,14 +28,13 @@ class Vector(VectorSpace):
     _IS_VECTOR = True
 
     def __init__(self, values, length=None):
-        self._value = values
-        self.size = len(values)
-        #if self.n == 0:
-        #    raise ValueError('Vector of size zero')
-        self._length = length
+        self._explicit_setattr('_value', values)
+        self._explicit_setattr('size', len(values))
+        self._explicit_setattr('_length', length)
+        self._explicit_setattr('_hash', None)
 
     def __repr__(self):
-        return '(' + (', '.join(str(x) for x in self._value)) + ')ᵗ'
+        return '({(", ".join(str(x) for x in self._value))})ᵗ'
         # add rounding
         # add horizontal vectors (?)
         # change to fstring
@@ -78,10 +78,10 @@ class Vector(VectorSpace):
         return Vector(c)
 
     def __hash__(self):
-        return hash(self._value)
-
-    def __eq__(self, other):
-        return hash(self) == hash(other)
+        if (h:=self._hash) is None:
+            h = hash(self._value)
+            self._explicit_setattr('_hash', h)
+        return h
 
     @property
     def length_squared(self):
@@ -94,7 +94,7 @@ class Vector(VectorSpace):
         :return: int
         """
         if self._length is None:
-            self._length = sqrt(self.length_squared)
+            self._explicit_setattr('_length', sqrt(self.length_squared))
         return self._length
 
     @property

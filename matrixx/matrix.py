@@ -2,10 +2,11 @@ from operator import mul
 from math import prod
 
 from matrixx.vector_space import VectorSpace
+from matrixx.immutable import Immutable
 import matrixx.vector
 
 
-class Matrix(VectorSpace):  # TODO extract matrix and common to linalg module?
+class Matrix(VectorSpace, Immutable):
     """
     Matrix implementation. Index with M[i,j] (start at zero!)
 
@@ -30,13 +31,14 @@ class Matrix(VectorSpace):  # TODO extract matrix and common to linalg module?
     _IS_MATRIX = True
 
     def __init__(self, rows, det=None):  # assumes input is tuple of tuples!
-        self._value = rows
         m = len(rows)
         n = len(rows[0])
-        self.size = (m, n)
-        self.is_square = m == n
-        self._det = det
-        self._LR = None
+        self._explicit_setattr('_value', rows)
+        self._explicit_setattr('size', (m, n))
+        self._explicit_setattr('is_square', m == n)
+        self._explicit_setattr('_det', det)
+        self._explicit_setattr('_LR', None)
+        self._explicit_setattr('_hash', None)
 
     @property
     def det(self):
@@ -48,24 +50,24 @@ class Matrix(VectorSpace):  # TODO extract matrix and common to linalg module?
             v = self._value
             m, n = self.size
             if not self.is_square:
-                self._det = 0
+                self._explicit_setattr('_det', 0)
             elif m == 1:
-                self._det = v[0][0]
+                self._explicit_setattr('_det', v[0][0])
             elif m == 2:
-                self._det = (
+                self._explicit_setattr('_det', (
                     v[0][0]*v[1][1] -
                     v[0][1]*v[1][0]
-                )
+                ))
             elif m == 3:
                 # a(ei - fh) - b(di - fg) + c(dh - eg)
-                self._det = (
+                self._explicit_setattr('_det', (
                     v[0][0] * (v[1][1] * v[2][2] - v[1][2] * v[2][1]) -
                     v[0][1] * (v[1][0] * v[2][2] - v[1][2] * v[2][0]) +
                     v[0][2] * (v[1][0] * v[2][1] - v[1][1] * v[2][0])
-                )
+                ))
                 # I would feel bad about doing this if it wasn't the best way
             else:
-                self._det = self.find_det_via_LR()
+                self._explicit_setattr('_det', self.find_det_via_LR())
         return self._det
 
     def __repr__(self):
@@ -148,13 +150,11 @@ class Matrix(VectorSpace):  # TODO extract matrix and common to linalg module?
             res *= self
         return res
 
-    def __eq__(self, other):
-        return hash(self) == hash(other)
-
     def __hash__(self):
-        if (res := self._hash) is None:
-            res = self._hash = hash(self._value)
-        return res
+        if (h:=self._hash) is None:
+            h = hash(self._rows)
+            self._explicit_setattr('_hash', h)
+        return h
 
     @property
     def t(self):
@@ -268,9 +268,10 @@ class Matrix(VectorSpace):  # TODO extract matrix and common to linalg module?
             ) for i, row in enumerate(LR)
         )
 
-        self._LR = Matrix(L), Matrix(R), vector.Vector(P), vector.Vector(D), f
+        res =  Matrix(L), Matrix(R), vector.Vector(P), vector.Vector(D), f
         # P is a list
-        return self._LR
+        self._explicit_setattr('_LR', res)
+        return res
 
     def forward_insertion(self, b):
         """
