@@ -107,6 +107,9 @@ class Vector(VectorSpace, Immutable):
             return matrix.Matrix(tuple(zip(self._value)))
         return matrix.Matrix((self._value,))
 
+    def to_tuple(self):
+        return self._value
+
     def copy(self):
         return self
 
