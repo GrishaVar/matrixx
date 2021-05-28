@@ -34,7 +34,7 @@ class Vector(VectorSpace, Immutable):
         self._explicit_setattr('_hash', None)
 
     def __repr__(self):
-        return '({(", ".join(str(x) for x in self._value))})ᵗ'
+        return f'({(", ".join(str(x) for x in self._value))})ᵗ'
         # add rounding
         # add horizontal vectors (?)
         # change to fstring
