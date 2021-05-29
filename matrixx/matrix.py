@@ -33,12 +33,13 @@ class Matrix(VectorSpace, Immutable):
     def __init__(self, rows, det=None):  # assumes input is tuple of tuples!
         m = len(rows)
         n = len(rows[0])
-        self._explicit_setattr('_value', rows)
-        self._explicit_setattr('size', (m, n))
-        self._explicit_setattr('is_square', m == n)
-        self._explicit_setattr('_det', det)
-        self._explicit_setattr('_LR', None)
-        self._explicit_setattr('_hash', None)
+        self._explicit_setattrs(
+            _value=rows,
+            size=(m, n),
+            is_square=m==n,
+            _LR=None,
+            _hash=None,
+        )
 
     @property
     def det(self):
@@ -50,7 +51,7 @@ class Matrix(VectorSpace, Immutable):
             v = self._value
             m, n = self.size
             if not self.is_square:
-                self._explicit_setattr('_det', 0)
+                self._explicit_setattr(_det=0)
             elif m == 1:
                 self._explicit_setattr('_det', v[0][0])
             elif m == 2:

@@ -28,10 +28,12 @@ class Vector(VectorSpace, Immutable):
     _IS_VECTOR = True
 
     def __init__(self, values, length=None):
-        self._explicit_setattr('_value', values)
-        self._explicit_setattr('size', len(values))
-        self._explicit_setattr('_length', length)
-        self._explicit_setattr('_hash', None)
+        self._explicit_setattrs(
+            _value=values,
+            size=len(values),
+            _length=length,
+            _hash=None,
+        )
 
     def __repr__(self):
         return f'({(", ".join(str(x) for x in self._value))})ᵗ'

@@ -11,3 +11,7 @@ class Immutable:
 
     def _explicit_setattr(self, attr, value):
         object.__setattr__(self, attr, value)
+
+    def _explicit_setattrs(self, **kwargs):
+        for item in kwargs.items():
+            object.__setattr__(self, *item)
