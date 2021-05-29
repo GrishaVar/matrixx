@@ -5,21 +5,29 @@ from matrixx.vector import Vector as V
 
 
 class V2:
-    Z = V((0,0), 0)
-    E = V((1,1), sqrt(2))
-    I, J = V((1,0), 1), V((0,1), 1)
+    Z = V((0, 0), 0)
+    E = V((1, 1), sqrt(2))
+    I, J = V((1, 0), 1), V((0, 1), 1)
 
 
 class V3:
-    Z = V((0,0,0), 0)
-    E = V((1,1,1), sqrt(3))
-    I, J, K = V((1,0,0), 1), V((0,1,0), 1), V((0,0,1), 1)
-    IJ, IK, JK = (V((1,1,0), sqrt(2)), V((1,0,1), sqrt(2)), V((0,1,1), sqrt(2)))
+    Z = V((0, 0, 0), 0)
+    E = V((1, 1, 1), sqrt(3))
+    I, J, K = (
+        V((1, 0, 0), 1),
+        V((0, 1, 0), 1),
+        V((0, 0, 1), 1),
+    )
+    IJ, IK, JK = (
+        V((1, 1, 0), sqrt(2)),
+        V((1, 0, 1), sqrt(2)),
+        V((0, 1, 1), sqrt(2)),
+    )
 
 
 class M2:
-    Z = M(((0,0), (0,0)), 0)
-    E = M(((1,0), (0,1)), 1)
+    Z = M(((0, 0), (0, 0)), 0)
+    E = M(((1, 0), (0, 1)), 1)
 
     @staticmethod
     def rot(a):  # rotates up / anticlockwise
@@ -32,8 +40,8 @@ class M2:
 
 
 class M3:
-    Z = M(((0,0,0), (0,0,0), (0,0,0)), 0)
-    E = M(((1,0,0), (0,1,0), (0,0,1)), 1)
+    Z = M(((0, 0, 0), (0, 0, 0), (0, 0, 0)), 0)
+    E = M(((1, 0, 0), (0, 1, 0), (0, 0, 1)), 1)
 
     @staticmethod
     def x_rot(a):  # right hand rule rotation!

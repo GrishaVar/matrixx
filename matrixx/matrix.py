@@ -3,7 +3,10 @@ from math import prod
 
 from matrixx.vector_space import VectorSpace
 from matrixx.immutable import Immutable
-import matrixx.vector
+import matrixx.vector as vector
+
+
+_ZERO = 0
 
 
 class Matrix(VectorSpace, Immutable):
@@ -36,7 +39,7 @@ class Matrix(VectorSpace, Immutable):
         self._explicit_setattrs(
             _value=rows,
             size=(m, n),
-            is_square=m==n,
+            is_square=m == n,
             _LR=None,
             _hash=None,
         )
@@ -88,7 +91,7 @@ class Matrix(VectorSpace, Immutable):
             return self._value[pos]
 
     def __add__(self, other):
-        if other is 0:
+        if other is _ZERO:
             # for sum()
             # this causes a warning but
             # I thought about it and "is 0" is what I want
@@ -126,7 +129,9 @@ class Matrix(VectorSpace, Immutable):
             return NotImplemented
 
         if self.size[1] != other.size[0]:
-            raise ValueError(f'Incompatible Sizes of multiplaction of {self} and {other}')
+            raise ValueError(
+                f'Incompatible sizes of multiplaction of {self} and {other}'
+            )
         # TODO make some toggleable thing to supress all checks
 
         a = self._value
@@ -145,14 +150,14 @@ class Matrix(VectorSpace, Immutable):
 
     def __pow__(self, other):
         # TODO: update to matmul (preferably without creating n Matrix objs)
-        raise NotImplementedError('see todo')
+        raise NotImplementedError('Matrix.__pow__ not implemented')
         res = self
         for x in range(other-1):
             res *= self
         return res
 
     def __hash__(self):
-        if (h:=self._hash) is None:
+        if (h := self._hash) is None:
             h = hash(self._rows)
             self._explicit_setattr('_hash', h)
         return h
@@ -182,9 +187,11 @@ class Matrix(VectorSpace, Immutable):
         :param i: index of row 1
         :param j: index of row 2
         """
-        f = lambda x: i if x == j else (j if x == i else x)
         v = self._value
-        return Matrix(tuple(v[f(k)] for k in range(self.size)))
+        return Matrix(tuple(
+            v[i if k == j else (j if k == i else k)]
+            for k in range(self.size)
+        ))
 
     def row_mult(self, i, m):
         """
@@ -229,7 +236,9 @@ class Matrix(VectorSpace, Immutable):
             return self._LR
         m, n = self.size
         if m != n:
-            raise ValueError('LR Decomposition only works for square matrices.')
+            raise ValueError(
+                'LR Decomposition only works for square matrices.'
+            )
         A = self._value
 
         # Skalierung
@@ -257,19 +266,19 @@ class Matrix(VectorSpace, Immutable):
 
         L = tuple(
             tuple(
-                LRij if i>j else (1 if i==j else 0)
+                LRij if i > j else (1 if i == j else 0)
                 for j, LRij in enumerate(row)
             ) for i, row in enumerate(LR)
         )
 
         R = tuple(
             tuple(
-                LRij if i<=j else 0
+                LRij if i <= j else 0
                 for j, LRij in enumerate(row)
             ) for i, row in enumerate(LR)
         )
 
-        res =  Matrix(L), Matrix(R), vector.Vector(P), vector.Vector(D), f
+        res = Matrix(L), Matrix(R), vector.Vector(P), vector.Vector(D), f
         # P is a list
         self._explicit_setattr('_LR', res)
         return res
@@ -289,7 +298,6 @@ class Matrix(VectorSpace, Immutable):
         for i in range(len(b)):
             x.append((b[i] - sum(map(mul, A[i][:i], x))) / A[i][i])
         return vector.Vector(tuple(x))
-
 
     def backward_insertion(self, b):
         """
@@ -344,7 +352,7 @@ class Matrix(VectorSpace, Immutable):
         # (-1)^f * prod D * det A = product(diagonal(R))
         r = prod(R[i][i] for i in range(D.size))
         d = prod(D._value)
-        f = -1 if f%2 else 1  # (-1)^f
+        f = -1 if f % 2 else 1  # (-1)^f
         return r / (f * d)
 
     def find_inverse_via_LR(self):

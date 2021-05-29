@@ -1,9 +1,13 @@
 from math import sqrt
 from operator import mul, add
+from itertools import repeat
 
 from matrixx.vector_space import VectorSpace
 from matrixx.immutable import Immutable
-import matrixx.matrix
+import matrixx.matrix as matrix
+
+
+_ZERO = 0
 
 
 class Vector(VectorSpace, Immutable):
@@ -45,7 +49,7 @@ class Vector(VectorSpace, Immutable):
         return self._value[pos]
 
     def __add__(self, other):
-        if other is 0:
+        if other is _ZERO:
             # for sum()
             # this causes a warning but
             # I thought about it and "is 0" is what I want
@@ -61,12 +65,7 @@ class Vector(VectorSpace, Immutable):
             return Vector(tuple(map(mul, self._value, a._value)))
         except AttributeError:  # TODO: which exception?
             # scalar mult
-            #return Vector(tuple(a*b for b in self._value))
-            return Vector(tuple(map(float(a).__mul__, self._value)))
-            # sign of bad code when I need to do this.
-            # a has to be a float because if int.__mul__ returns
-            # NotImplemented if self._value has floats...
-            # TODO fix this!
+            return Vector(tuple(map(mul, self._value, repeat(a))))
 
     def __matmul__(self, other):  # v@v
         a = self._value
@@ -80,7 +79,8 @@ class Vector(VectorSpace, Immutable):
         return Vector(c)
 
     def __hash__(self):
-        if (h:=self._hash) is None:
+        print('hashing')
+        if (h := self._hash) is None:
             h = hash(self._value)
             self._explicit_setattr('_hash', h)
         return h
@@ -157,7 +157,7 @@ class Vector(VectorSpace, Immutable):
         """
         if self.length_squared < bound**2:
             return self
-        else: 
+        else:
             return bound * self.unit
 
     def permute(self, p):
