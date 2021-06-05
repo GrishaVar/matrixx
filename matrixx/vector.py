@@ -32,12 +32,10 @@ class Vector(VectorSpace, Immutable):
     _IS_VECTOR = True
 
     def __init__(self, values, length=None):
-        self._explicit_setattrs(
-            _value=values,
-            size=len(values),
-            _length=length,
-            _hash=None,
-        )
+        self._value = values
+        self.size = len(values)
+        self._length = length
+        self._hash = None
 
     def __repr__(self):
         return f'({(", ".join(str(x) for x in self._value))})ᵗ'
@@ -79,10 +77,9 @@ class Vector(VectorSpace, Immutable):
         return Vector(c)
 
     def __hash__(self):
-        print('hashing')
         if (h := self._hash) is None:
             h = hash(self._value)
-            self._explicit_setattr('_hash', h)
+            self._hash = h
         return h
 
     @property
@@ -96,7 +93,7 @@ class Vector(VectorSpace, Immutable):
         :return: int
         """
         if self._length is None:
-            self._explicit_setattr('_length', sqrt(self.length_squared))
+            self._length = sqrt(self.length_squared)
         return self._length
 
     @property

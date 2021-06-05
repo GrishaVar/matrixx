@@ -36,13 +36,11 @@ class Matrix(VectorSpace, Immutable):
     def __init__(self, rows, det=None):  # assumes input is tuple of tuples!
         m = len(rows)
         n = len(rows[0])
-        self._explicit_setattrs(
-            _value=rows,
-            size=(m, n),
-            is_square=m == n,
-            _LR=None,
-            _hash=None,
-        )
+        self._value = rows
+        self.size = (m, n)
+        self.is_square = (m == n)
+        _LR = None
+        _hash = None
 
     @property
     def det(self):
@@ -54,24 +52,24 @@ class Matrix(VectorSpace, Immutable):
             v = self._value
             m, n = self.size
             if not self.is_square:
-                self._explicit_setattr(_det=0)
+                self._det =0
             elif m == 1:
-                self._explicit_setattr('_det', v[0][0])
+                self._det = v[0][0]
             elif m == 2:
-                self._explicit_setattr('_det', (
+                self._det = (
                     v[0][0]*v[1][1] -
                     v[0][1]*v[1][0]
-                ))
+                )
             elif m == 3:
                 # a(ei - fh) - b(di - fg) + c(dh - eg)
-                self._explicit_setattr('_det', (
+                self._det = (
                     v[0][0] * (v[1][1] * v[2][2] - v[1][2] * v[2][1]) -
                     v[0][1] * (v[1][0] * v[2][2] - v[1][2] * v[2][0]) +
                     v[0][2] * (v[1][0] * v[2][1] - v[1][1] * v[2][0])
-                ))
+                )
                 # I would feel bad about doing this if it wasn't the best way
             else:
-                self._explicit_setattr('_det', self.find_det_via_LR())
+                self._det = self.find_det_via_LR()
         return self._det
 
     def __repr__(self):
@@ -280,7 +278,7 @@ class Matrix(VectorSpace, Immutable):
 
         res = Matrix(L), Matrix(R), vector.Vector(P), vector.Vector(D), f
         # P is a list
-        self._explicit_setattr('_LR', res)
+        self._LR = res
         return res
 
     def forward_insertion(self, b):
