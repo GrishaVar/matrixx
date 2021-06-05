@@ -97,6 +97,14 @@ class Vector(VectorSpace, Immutable):
     def unit(self):
         return (1/self.length) * self
 
+    @cached_property
+    def norm_1(self):
+        return sum(map(abs, self._value))
+
+    @cached_property
+    def norm_inf(self):
+        return max(map(abs, self._value))
+
     def to_matrix(self, vert=True):
         """Converts Vector to Matrix."""
         if vert:
