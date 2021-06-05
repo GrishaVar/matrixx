@@ -1,6 +1,7 @@
 from math import sqrt
 from operator import mul, add
 from itertools import repeat
+from functools import cached_property
 
 from matrixx.vector_space import VectorSpace
 from matrixx.immutable import Immutable
@@ -34,8 +35,9 @@ class Vector(VectorSpace, Immutable):
     def __init__(self, values, length=None):
         self._value = values
         self.size = len(values)
-        self._length = length
-        self._hash = None
+
+        if length is not None:
+            self.length = length
 
     def __repr__(self):
         return f'({(", ".join(str(x) for x in self._value))})ᵗ'
@@ -77,26 +79,21 @@ class Vector(VectorSpace, Immutable):
         return Vector(c)
 
     def __hash__(self):
-        if (h := self._hash) is None:
-            h = hash(self._value)
-            self._hash = h
-        return h
+        return hash(self._value)  # TODO: cache?
 
-    @property
+    @cached_property
     def length_squared(self):
         return self @ self
 
-    @property
+    @cached_property
     def length(self):  # another semi-memoised expensive function
         """
         Returns euclidean norm of vector.
         :return: int
         """
-        if self._length is None:
-            self._length = sqrt(self.length_squared)
-        return self._length
+        return sqrt(self.length_squared)
 
-    @property
+    @cached_property
     def unit(self):
         return (1/self.length) * self
 
@@ -112,6 +109,7 @@ class Vector(VectorSpace, Immutable):
     def copy(self):
         return self
 
+    @cached_property
     def orthant(self):
         res = 0
         for n in self._value:

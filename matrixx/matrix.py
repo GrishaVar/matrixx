@@ -1,5 +1,6 @@
 from operator import mul
 from math import prod
+from functools import cached_property
 
 from matrixx.vector_space import VectorSpace
 from matrixx.immutable import Immutable
@@ -39,38 +40,34 @@ class Matrix(VectorSpace, Immutable):
         self._value = rows
         self.size = (m, n)
         self.is_square = (m == n)
-        _LR = None
-        _hash = None
 
-    @property
+        if det is not None:
+            self.det = det
+
+    @cached_property
     def det(self):
         """
         Calculate and store determinant.
         :return: int
         """
-        if self._det is None:  # kinda-sorta-memoised determinant
-            v = self._value
-            m, n = self.size
-            if not self.is_square:
-                self._det =0
-            elif m == 1:
-                self._det = v[0][0]
-            elif m == 2:
-                self._det = (
-                    v[0][0]*v[1][1] -
-                    v[0][1]*v[1][0]
-                )
-            elif m == 3:
-                # a(ei - fh) - b(di - fg) + c(dh - eg)
-                self._det = (
-                    v[0][0] * (v[1][1] * v[2][2] - v[1][2] * v[2][1]) -
-                    v[0][1] * (v[1][0] * v[2][2] - v[1][2] * v[2][0]) +
-                    v[0][2] * (v[1][0] * v[2][1] - v[1][1] * v[2][0])
-                )
-                # I would feel bad about doing this if it wasn't the best way
-            else:
-                self._det = self.find_det_via_LR()
-        return self._det
+        v = self._value
+        m, n = self.size
+        if not self.is_square:
+            return 0
+        elif m == 1:
+            return v[0][0]
+        elif m == 2:
+            return v[0][0]*v[1][1] - v[0][1]*v[1][0]
+        elif m == 3:
+            # a(ei - fh) - b(di - fg) + c(dh - eg)
+            return (
+                v[0][0] * (v[1][1] * v[2][2] - v[1][2] * v[2][1]) -
+                v[0][1] * (v[1][0] * v[2][2] - v[1][2] * v[2][0]) +
+                v[0][2] * (v[1][0] * v[2][1] - v[1][1] * v[2][0])
+            )
+            # I would feel bad about doing this if it wasn't the best way
+        else:
+            return self.det_LR
 
     def __repr__(self):
         res_parts = []
@@ -118,8 +115,11 @@ class Matrix(VectorSpace, Immutable):
             ) for i in range(m)
         )
 
-        if (det := self._det) is not None:
-            det *= a
+        try:
+            det = a * self.__dict__['det']
+        except KeyError:
+            det = None
+
         return Matrix(c, det)
 
     def __matmul__(self, other):
@@ -141,8 +141,10 @@ class Matrix(VectorSpace, Immutable):
             ) for a_row in a
         )  # I'm quite pleased with myself
 
-        if not ((det := self._det) is None or (b_det := other._det) is None):
-            det *= b_det
+        try:
+            det = self.__dict__['det'] * other.__dict__['det']
+        except KeyError:
+            det = None
 
         return Matrix(c, det)
 
@@ -155,16 +157,14 @@ class Matrix(VectorSpace, Immutable):
         return res
 
     def __hash__(self):
-        if (h := self._hash) is None:
-            h = hash(self._rows)
-            self._explicit_setattr('_hash', h)
-        return h
+        return hash(self._value)  # TODO: cache?
 
-    @property
+    @cached_property
     def t(self):
         return Matrix(tuple(zip(*self._value)))
 
-    def to_vector(self):
+    @cached_property
+    def as_vector(self):
         """
         Converts single-column or single-row matrix into a vector.
         :return: Vector
@@ -188,7 +188,7 @@ class Matrix(VectorSpace, Immutable):
         v = self._value
         return Matrix(tuple(
             v[i if k == j else (j if k == i else k)]
-            for k in range(self.size)
+            for k in range(self.size[0])
         ))
 
     def row_mult(self, i, m):
@@ -217,6 +217,7 @@ class Matrix(VectorSpace, Immutable):
         new = tuple(x + m*y for x, y in zip(v[i], v[j]))
         return Matrix(tuple(row if k != i else new for k, row in enumerate(v)))
 
+    @cached_property
     def decomp_LR(self):
         """
         Compute LU decomposition with scaling and pivoting
@@ -230,8 +231,6 @@ class Matrix(VectorSpace, Immutable):
         D is the scaling vector (represents dia matrix)
         f: number of flips in P
         """
-        if self._LR is not None:
-            return self._LR
         m, n = self.size
         if m != n:
             raise ValueError(
@@ -276,10 +275,8 @@ class Matrix(VectorSpace, Immutable):
             ) for i, row in enumerate(LR)
         )
 
-        res = Matrix(L), Matrix(R), vector.Vector(P), vector.Vector(D), f
         # P is a list
-        self._LR = res
-        return res
+        return Matrix(L), Matrix(R), vector.Vector(P), vector.Vector(D), f
 
     def forward_insertion(self, b):
         """
@@ -326,7 +323,7 @@ class Matrix(VectorSpace, Immutable):
 
         Returns vector x
         """
-        L, R, P, D, _ = self.decomp_LR()
+        L, R, P, D, _ = self.decomp_LR
         # PDA = LR
         # Ax = b
         # PDAx = PDb
@@ -337,12 +334,13 @@ class Matrix(VectorSpace, Immutable):
         x = R.backward_insertion(y)
         return x
 
-    def find_det_via_LR(self):
+    @cached_property
+    def det_LR(self):
         """
         Finds determinant of self using LR decomposition
         does NOT update the det cache
         """
-        _, R, _, D, f = self.decomp_LR()
+        _, R, _, D, f = self.decomp_LR
         # PDA = LR
         # det P * det D * det A = det L * det R
         # det P * det D * det A = det R
@@ -353,7 +351,8 @@ class Matrix(VectorSpace, Immutable):
         f = -1 if f % 2 else 1  # (-1)^f
         return r / (f * d)
 
-    def find_inverse_via_LR(self):
+    @cached_property
+    def inv_LR(self):
         res = []  # these are columns of the inverse
         m, n = self.size
         if m != n:
