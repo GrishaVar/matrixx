@@ -143,6 +143,20 @@ class Vector(VectorSpace, Immutable):
 
         return Vector((s1, s2, s3))
 
+    @cached_property
+    def perpendicular(self):
+        """
+        Perpendicular vector. Only defined for 2 dimensional vectors. Direction is arbitrary.
+        :param other: 
+        :return: self⨯other
+        """
+        try:
+            a1, a2 = self._value
+        except ValueError:
+            raise ValueError("Perpendicular only implemented for vectors with 2 components.")
+
+        return Vector((-a2, a1))
+
     def project(self, basis):
         """
         Return projection of vector in given basis.
