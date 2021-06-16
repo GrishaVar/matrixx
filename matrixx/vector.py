@@ -133,13 +133,15 @@ class Vector(VectorSpace, Immutable):
         :return: self⨯other
         """
         # Also exists for 7 dimensions... implement?
+        try:
+            a1, a2, a3 = self._value
+            b1, b2, b3 = other._value
 
-        a1, a2, a3 = self._value
-        b1, b2, b3 = other._value
-
-        s1 = a2 * b3 - a3 * b2
-        s2 = a3 * b1 - a1 * b3
-        s3 = a1 * b2 - a2 * b1
+            s1 = a2 * b3 - a3 * b2
+            s2 = a3 * b1 - a1 * b3
+            s3 = a1 * b2 - a2 * b1
+        except ValueError:
+            raise ValueError("Cross Product only exist for vectors with 3 components.")
 
         return Vector((s1, s2, s3))
 
