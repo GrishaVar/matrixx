@@ -141,21 +141,24 @@ class Vector(VectorSpace, Immutable):
             s2 = a3 * b1 - a1 * b3
             s3 = a1 * b2 - a2 * b1
         except ValueError:
-            raise ValueError("Cross Product only exist for vectors with 3 components.")
+            raise ValueError(
+                "Cross Product only exist for vectors with 3 components."
+            )
 
         return Vector((s1, s2, s3))
 
     @cached_property
     def perpendicular(self):
         """
-        Perpendicular vector. Only defined for 2 dimensional vectors. Direction is arbitrary.
-        :param other: 
-        :return: self⨯other
+        Perpendicular vector. Only defined for 2 dimensional vectors.
+        Direction is arbitrary.
         """
         try:
             a1, a2 = self._value
         except ValueError:
-            raise ValueError("Perpendicular only implemented for vectors with 2 components.")
+            raise ValueError(
+                "Perpendicular only implemented for vectors with 2 components."
+            )
 
         return Vector((-a2, a1))
 
